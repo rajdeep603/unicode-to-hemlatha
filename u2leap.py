@@ -21,7 +21,8 @@ RANK = {c: i for i, c in enumerate(CONSONANTS)}
 BASE_BLOCK = 20
 HALANT_BLOCK = 524
 VATTU_BASE = 700
-ALT_RA_VATTU = 737  # 'û' — ra as 2nd+ subjoined consonant (స్త్ర pattern)
+RA_HOOK = 726       # 'ú' — pre-positioned ్ర hook, emitted BEFORE the base glyph
+ALT_RA_VATTU = 737  # 'û' — ్ర after another vattu (స్త్ర pattern), appended after
 
 MATRA_BLOCK = {
     "ా": 56, "ి": 92, "ీ": 128, "ు": 164, "ూ": 200,
@@ -56,10 +57,10 @@ APPROX = {"ౘ": "చ", "ౙ": "జ", "ౚ": "ఱ", "ఴ": "ళ"}
 DROP = set("ౕౖౢౣఀఄ఼ఽ౷")
 
 
-def _vattus(subs: list) -> str:
+def _vattus(subs: list, after_vattu: bool = False) -> str:
     out = ""
     for k, c in enumerate(subs):
-        if c == "ర" and k > 0:
+        if c == "ర" and (k > 0 or after_vattu):
             out += _g(ALT_RA_VATTU)
         else:
             out += _g(VATTU_BASE + RANK[c])
@@ -105,9 +106,15 @@ def convert(text: str) -> str:
                 matra = chars[j]
                 j += 1
 
+            # ్ర as first subjoined consonant: pre-positioned hook ú before
+            # the whole cluster glyph (legacy convention, e.g. ప్రై = ú\|ms)
+            pre_ra = bool(subs) and subs[0] == "ర"
+            if pre_ra:
+                out.append(_g(RA_HOOK))
+                subs = subs[1:]
             if base == "క" and subs and subs[0] == "ష":
                 out.append(_g(KSHA_SERIES["్" if halant_final else matra]))
-                out.append(_vattus(subs[1:]))
+                out.append(_vattus(subs[1:], after_vattu=True))
             else:
                 r = RANK[base]
                 if halant_final:
@@ -116,7 +123,7 @@ def convert(text: str) -> str:
                     out.append(_g(MATRA_BLOCK[matra] + r))
                 else:
                     out.append(_g(BASE_BLOCK + r))
-                out.append(_vattus(subs))
+                out.append(_vattus(subs, after_vattu=pre_ra))
             i = j
             continue
 

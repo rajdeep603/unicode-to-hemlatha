@@ -27,7 +27,8 @@ const RANK = new Map(CONSONANTS.map((c, i) => [c, i]));
 const BASE_BLOCK = 20;
 const HALANT_BLOCK = 524;
 const VATTU_BASE = 700;
-const ALT_RA_VATTU = 737; // 'û' — used for ra in 3-consonant clusters (స్త్ర)
+const RA_HOOK = 726;      // 'ú' — pre-positioned ్ర hook, emitted BEFORE the base glyph
+const ALT_RA_VATTU = 737; // 'û' — ్ర after another vattu (స్త్ర pattern), appended after
 
 const MATRA_BLOCK = new Map([
   ['ా', 56], ['ి', 92], ['ీ', 128], ['ు', 164], ['ూ', 200],
@@ -111,16 +112,20 @@ export function convert(input) {
       }
 
       // --- emit ---
+      // ్ర as first subjoined consonant: pre-positioned hook ú before the
+      // whole cluster glyph (legacy convention, e.g. ప్రై = ú\|ms)
+      const preRa = subs[0] === 'ర';
+      if (preRa) { out += g(RA_HOOK); subs.shift(); }
       if (base === 'క' && subs[0] === 'ష') {
         // క్ష ligature takes the whole matra/halant slot
         out += g(KSHA_SERIES.get(halantFinal ? '్' : matra));
-        out += vattus(subs.slice(1));
+        out += vattus(subs.slice(1), true);
       } else {
         const r = RANK.get(base);
         if (halantFinal) out += g(HALANT_BLOCK + r);
         else if (matra) out += g(MATRA_BLOCK.get(matra) + r);
         else out += g(BASE_BLOCK + r);
-        out += vattus(subs);
+        out += vattus(subs, preRa);
       }
       i = j;
       continue;
@@ -137,11 +142,11 @@ export function convert(input) {
   return out;
 }
 
-function vattus(subs) {
+function vattus(subs, afterVattu = false) {
   let s = '';
   for (let k = 0; k < subs.length; k += 1) {
     const c = subs[k];
-    if (c === 'ర' && k > 0) s += g(ALT_RA_VATTU); // స్త్ర-style alt ra-vattu
+    if (c === 'ర' && (k > 0 || afterVattu)) s += g(ALT_RA_VATTU); // స్త్ర-style alt ra-vattu
     else s += g(VATTU_BASE + RANK.get(c));
   }
   return s;

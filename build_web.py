@@ -17,7 +17,7 @@ const g = (i) => GLYPHS[String(i)] ?? '';
 
 const CONSONANTS = [...'కఖగఘఙచఛజఝఞటఠడఢణతథదధనపఫబభమయరఱలళవశషసహ'];
 const RANK = new Map(CONSONANTS.map((c, i) => [c, i]));
-const BASE_BLOCK = 20, HALANT_BLOCK = 524, VATTU_BASE = 700, ALT_RA_VATTU = 737;
+const BASE_BLOCK = 20, HALANT_BLOCK = 524, VATTU_BASE = 700, RA_HOOK = 726, ALT_RA_VATTU = 737;
 const MATRA_BLOCK = new Map([
   ['ా',56],['ి',92],['ీ',128],['ు',164],['ూ',200],['ృ',236],['ౄ',272],
   ['ె',308],['ే',344],['ై',380],['ొ',416],['ో',452],['ౌ',488],
@@ -37,11 +37,11 @@ const VIRAMA = '్', ZWNJ = '‌', ZWJ = '‍';
 const APPROX = new Map([['ౘ', 'చ'], ['ౙ', 'జ'], ['ౚ', 'ఱ'], ['ఴ', 'ళ']]);
 const DROP = new Set([...'ౕౖౢౣఀఄ఼ఽ౷']);
 
-function vattus(subs) {
+function vattus(subs, afterVattu = false) {
   let s = '';
   for (let k = 0; k < subs.length; k += 1) {
     const c = subs[k];
-    if (c === 'ర' && k > 0) s += g(ALT_RA_VATTU);
+    if (c === 'ర' && (k > 0 || afterVattu)) s += g(ALT_RA_VATTU);
     else s += g(VATTU_BASE + RANK.get(c));
   }
   return s;
@@ -68,15 +68,17 @@ function convert(input) {
       }
       let matra = '';
       if (!halantFinal && MATRA_BLOCK.has(text[j])) { matra = text[j]; j += 1; }
+      const preRa = subs[0] === 'ర';
+      if (preRa) { out += g(RA_HOOK); subs.shift(); }
       if (base === 'క' && subs[0] === 'ష') {
         out += g(KSHA_SERIES.get(halantFinal ? '్' : matra));
-        out += vattus(subs.slice(1));
+        out += vattus(subs.slice(1), true);
       } else {
         const r = RANK.get(base);
         if (halantFinal) out += g(HALANT_BLOCK + r);
         else if (matra) out += g(MATRA_BLOCK.get(matra) + r);
         else out += g(BASE_BLOCK + r);
-        out += vattus(subs);
+        out += vattus(subs, preRa);
       }
       i = j;
       continue;
