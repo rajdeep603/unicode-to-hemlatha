@@ -1,0 +1,3 @@
+verify_corpus.txt -text
+verify_expected.txt -text
+*.ttf binary
