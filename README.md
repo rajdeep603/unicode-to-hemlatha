@@ -1,7 +1,29 @@
 # Unicode Telugu → TL-Hemalatha (iLEAP) Converter
 
 Portable replica of the legacy VB6 **"UNI 2 LEAP"** tool. No Windows, VB6, or
-legacy-machine dependency — pure Node.js (`u2leap.mjs` + `tables.json`).
+legacy-machine dependency. The engine exists twice with byte-identical output:
+Python (`u2leap.py`, used by the web UI) and Node.js (`u2leap.mjs`).
+
+## Quick start — Streamlit web UI
+
+```bash
+git clone git@github.com:rajdeep603/unicode-to-hemlatha.git
+cd unicode-to-hemlatha
+
+python3 -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+
+streamlit run app.py
+```
+
+Then open http://localhost:8501 — paste Unicode Telugu (Gautami) on the left,
+TL-Hemalatha appears on the right, rendered with the embedded Hemalatha font.
+Use **Download as ANSI .txt** for byte-exact files for legacy iLEAP/PageMaker
+workflows.
+
+To run on a different port: `streamlit run app.py --server.port 8080`.
+To serve on your LAN: add `--server.address 0.0.0.0`.
 
 ## Key discovery: no decompiling was needed
 
