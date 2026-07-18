@@ -1486,6 +1486,8 @@ const MISC = new Map([
   ['​', ''], ['‌', ''], ['‍', ''],
 ]);
 const VIRAMA = '్', ZWNJ = '‌', ZWJ = '‍';
+const APPROX = new Map([['ౘ', 'చ'], ['ౙ', 'జ'], ['ౚ', 'ఱ'], ['ఴ', 'ళ']]);
+const DROP = new Set([...'ౕౖౢౣఀఄ఼ఽ౷']);
 
 function vattus(subs) {
   let s = '';
@@ -1498,7 +1500,9 @@ function vattus(subs) {
 }
 
 function convert(input) {
-  const text = [...input.normalize('NFC')];
+  const text = [...input.normalize('NFC')]
+    .filter((c) => !DROP.has(c))
+    .map((c) => APPROX.get(c) ?? c);
   let out = '';
   let i = 0;
   while (i < text.length) {
@@ -1533,7 +1537,7 @@ function convert(input) {
     else if (TELUGU_DIGITS.has(c)) out += TELUGU_DIGITS.get(c);
     else if (MISC.has(c)) out += MISC.get(c);
     else if (MATRA_BLOCK.has(c) || c === VIRAMA) { /* stray matra: drop */ }
-    else out += c;
+    else out += c.codePointAt(0) <= 0xff ? c : '?';
     i += 1;
   }
   return out;

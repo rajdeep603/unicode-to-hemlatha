@@ -50,6 +50,11 @@ VIRAMA = "్"
 ZWNJ = "‌"
 ZWJ = "‍"
 
+# Rare letters approximated to their nearest classical equivalent
+APPROX = {"ౘ": "చ", "ౙ": "జ", "ౚ": "ఱ", "ఴ": "ళ"}
+# Combining marks/signs with no Hemalatha equivalent: dropped like stray matras
+DROP = set("ౕౖౢౣఀఄ఼ఽ౷")
+
 
 def _vattus(subs: list) -> str:
     out = ""
@@ -66,7 +71,11 @@ def convert(text: str) -> str:
 
     Output chars map 1:1 to the legacy font's byte values via latin-1.
     """
-    chars = list(unicodedata.normalize("NFC", text))
+    chars = [
+        APPROX.get(c, c)
+        for c in unicodedata.normalize("NFC", text)
+        if c not in DROP
+    ]
     out = []
     i, n = 0, len(chars)
 
@@ -120,7 +129,8 @@ def convert(text: str) -> str:
         elif c in MATRA_BLOCK or c == VIRAMA:
             pass  # stray matra: drop
         else:
-            out.append(c)  # ASCII & everything else passes through
+            # pass through, but never let a >0xFF char corrupt the byte output
+            out.append(c if ord(c) <= 0xFF else "?")
         i += 1
 
     return "".join(out)

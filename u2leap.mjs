@@ -61,6 +61,11 @@ const VIRAMA = '్';
 const ZWNJ = '‌';
 const ZWJ = '‍';
 
+// Rare letters approximated to their nearest classical equivalent
+const APPROX = new Map([['ౘ', 'చ'], ['ౙ', 'జ'], ['ౚ', 'ఱ'], ['ఴ', 'ళ']]);
+// Combining marks/signs with no Hemalatha equivalent: dropped like stray matras
+const DROP = new Set([...'ౕౖౢౣఀఄ఼ఽ౷']);
+
 const isConsonant = (c) => RANK.has(c);
 
 /**
@@ -68,7 +73,9 @@ const isConsonant = (c) => RANK.has(c);
  * Output chars map 1:1 to the legacy font's byte values via latin-1.
  */
 export function convert(input) {
-  const text = [...input.normalize('NFC')];
+  const text = [...input.normalize('NFC')]
+    .filter((c) => !DROP.has(c))
+    .map((c) => APPROX.get(c) ?? c);
   let out = '';
   let i = 0;
 
@@ -123,7 +130,8 @@ export function convert(input) {
     if (TELUGU_DIGITS.has(c)) { out += TELUGU_DIGITS.get(c); i += 1; continue; }
     if (MISC.has(c)) { out += MISC.get(c); i += 1; continue; }
     if (MATRA_BLOCK.has(c) || c === VIRAMA) { i += 1; continue; } // stray matra: drop
-    out += c; // ASCII & everything else passes through
+    // pass through, but never let a >0xFF char corrupt the byte output
+    out += c.codePointAt(0) <= 0xff ? c : '?';
     i += 1;
   }
   return out;
