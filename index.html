@@ -1520,8 +1520,9 @@ function convert(input) {
       }
       let matra = '';
       if (!halantFinal && MATRA_BLOCK.has(text[j])) { matra = text[j]; j += 1; }
-      const preRa = subs[0] === 'ర';
-      if (preRa) { out += g(RA_HOOK); subs.shift(); }
+      const traPair = subs.length >= 2 && subs[subs.length - 1] === 'ర' && subs[subs.length - 2] === 'త';
+      const preRa = subs.includes('ర') && !traPair;
+      if (preRa) { out += g(RA_HOOK); subs.splice(subs.indexOf('ర'), 1); }
       if (base === 'క' && subs[0] === 'ష') {
         out += g(KSHA_SERIES.get(halantFinal ? '్' : matra));
         out += vattus(subs.slice(1), true);

@@ -112,10 +112,12 @@ export function convert(input) {
       }
 
       // --- emit ---
-      // ్ర as first subjoined consonant: pre-positioned hook ú before the
-      // whole cluster glyph (legacy convention, e.g. ప్రై = ú\|ms)
-      const preRa = subs[0] === 'ర';
-      if (preRa) { out += g(RA_HOOK); subs.shift(); }
+      // ్ర in a cluster: pre-positioned hook ú before the whole cluster glyph
+      // (ప్రై = ú\|ms, స్ట్రీ = ú{qsí). Exception: the ్త్ర family (స్త్ర/స్త్రీ)
+      // keeps the legacy post-form ò+û per tokens 133/193.
+      const traPair = subs.length >= 2 && subs[subs.length - 1] === 'ర' && subs[subs.length - 2] === 'త';
+      const preRa = subs.includes('ర') && !traPair;
+      if (preRa) { out += g(RA_HOOK); subs.splice(subs.indexOf('ర'), 1); }
       if (base === 'క' && subs[0] === 'ష') {
         // క్ష ligature takes the whole matra/halant slot
         out += g(KSHA_SERIES.get(halantFinal ? '్' : matra));
