@@ -88,10 +88,12 @@ Run each line of `verify_corpus.txt` through the real UNI 2 LEAP app and diff
 byte-for-byte against `verify_expected.txt` (latin-1/ANSI encoded). Points of
 uncertainty to confirm:
 
-1. ~~ra-vattu choice~~ **RESOLVED** against known-good legacy output: ్ర as the
-   first subjoined consonant emits the pre-positioned hook `ú` (726) BEFORE
-   the whole base glyph (ప్రై = `ú\|ms`); ్ర after another vattu appends `û`
-   (737) after (స్త్ర = `xqsòû`).
+1. ~~ra-vattu choice~~ **RESOLVED** against known-good legacy output: ్ర as a
+   subjoined consonant emits the pre-positioned hook `ú` (726) BEFORE the
+   whole cluster glyph — including 3-consonant clusters (ప్రై = `ú\|ms`,
+   స్ట్రీ = `ú{qsí`, రాష్ట్రం = `LSúxtsQíLi`). Sole exception: the ్త్ర family
+   keeps the legacy post-form `ò`+`û` (స్త్ర = `xqsòû`), which is why
+   UNI_DECIM has dedicated tokens 133 (స్త్ర) and 193 (్త్ర).
 2. **Matra placement** with vattu + matra (మార్కు → `ª«sWLRiVä`, i.e. base
    takes the matra) — standard split-font convention, confirm visually.
 3. Smart quotes “ ” ‘ ’, en-dash, ellipsis — token table maps exist but the
