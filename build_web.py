@@ -121,7 +121,7 @@ HTML = """<!DOCTYPE html>
   textarea {{ width: 100%; height: 320px; resize: vertical; border: 1px solid var(--border);
               border-radius: 8px; padding: 10px; background: var(--bg); color: var(--text);
               font-size: 1.05rem; line-height: 1.7; }}
-  #out {{ font-family: 'TLHemalatha', monospace; font-size: 1.45rem; line-height: 2.1; }}
+  #out {{ font-family: 'TLHemalatha', monospace; font-size: 1.45rem; line-height: 1.6; }}
   .btns {{ margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }}
   button {{ border: 1px solid var(--border); background: var(--panel); color: var(--text);
             border-radius: 8px; padding: 7px 14px; cursor: pointer; font-size: .88rem; }}

@@ -26,7 +26,7 @@ def font_css() -> str:
     .st-key-leap_output textarea {{
         font-family: 'TLHemalatha', monospace !important;
         font-size: 1.5rem !important;
-        line-height: 2.2rem !important;
+        line-height: 1.6 !important;
     }}
     </style>
     """
