@@ -18,6 +18,7 @@ const g = (i) => GLYPHS[String(i)] ?? '';
 const CONSONANTS = [...'కఖగఘఙచఛజఝఞటఠడఢణతథదధనపఫబభమయరఱలళవశషసహ'];
 const RANK = new Map(CONSONANTS.map((c, i) => [c, i]));
 const BASE_BLOCK = 20, HALANT_BLOCK = 524, VATTU_BASE = 700, RA_HOOK = 726, ALT_RA_VATTU = 737;
+const VATTU_OVERRIDES = new Map([['ట', 727]]);
 const MATRA_BLOCK = new Map([
   ['ా',56],['ి',92],['ీ',128],['ు',164],['ూ',200],['ృ',236],['ౄ',272],
   ['ె',308],['ే',344],['ై',380],['ొ',416],['ో',452],['ౌ',488],
@@ -42,6 +43,7 @@ function vattus(subs, afterVattu = false) {
   for (let k = 0; k < subs.length; k += 1) {
     const c = subs[k];
     if (c === 'ర' && (k > 0 || afterVattu)) s += g(ALT_RA_VATTU);
+    else if (VATTU_OVERRIDES.has(c)) s += g(VATTU_OVERRIDES.get(c));
     else s += g(VATTU_BASE + RANK.get(c));
   }
   return s;

@@ -23,6 +23,9 @@ HALANT_BLOCK = 524
 VATTU_BASE = 700
 RA_HOOK = 726       # 'ú' — pre-positioned ్ర hook, emitted BEFORE the base glyph
 ALT_RA_VATTU = 737  # 'û' — ్ర after another vattu (స్త్ర pattern), appended after
+# Glyphs whose vattu is not at VATTU_BASE + rank (confirmed against known-good
+# output): ్ట is the plain-cup glyph at 727, not the loop+cup at 710.
+VATTU_OVERRIDES = {"ట": 727}
 
 MATRA_BLOCK = {
     "ా": 56, "ి": 92, "ీ": 128, "ు": 164, "ూ": 200,
@@ -62,6 +65,8 @@ def _vattus(subs: list, after_vattu: bool = False) -> str:
     for k, c in enumerate(subs):
         if c == "ర" and (k > 0 or after_vattu):
             out += _g(ALT_RA_VATTU)
+        elif c in VATTU_OVERRIDES:
+            out += _g(VATTU_OVERRIDES[c])
         else:
             out += _g(VATTU_BASE + RANK[c])
     return out

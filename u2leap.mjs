@@ -29,6 +29,9 @@ const HALANT_BLOCK = 524;
 const VATTU_BASE = 700;
 const RA_HOOK = 726;      // 'ú' — pre-positioned ్ర hook, emitted BEFORE the base glyph
 const ALT_RA_VATTU = 737; // 'û' — ్ర after another vattu (స్త్ర pattern), appended after
+// Glyphs whose vattu is not at VATTU_BASE + rank (confirmed against known-good
+// output): ్ట is the plain-cup glyph at 727, not the loop+cup at 710.
+const VATTU_OVERRIDES = new Map([['ట', 727]]);
 
 const MATRA_BLOCK = new Map([
   ['ా', 56], ['ి', 92], ['ీ', 128], ['ు', 164], ['ూ', 200],
@@ -149,6 +152,7 @@ function vattus(subs, afterVattu = false) {
   for (let k = 0; k < subs.length; k += 1) {
     const c = subs[k];
     if (c === 'ర' && (k > 0 || afterVattu)) s += g(ALT_RA_VATTU); // స్త్ర-style alt ra-vattu
+    else if (VATTU_OVERRIDES.has(c)) s += g(VATTU_OVERRIDES.get(c));
     else s += g(VATTU_BASE + RANK.get(c));
   }
   return s;
