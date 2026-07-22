@@ -69,6 +69,13 @@ with col_out:
         label_visibility="collapsed",
     )
     if leap_text:
+        shy = leap_text.count("\xad")  # soft hyphen: the వి/మి left-piece byte
+        if shy:
+            st.warning(
+                f"Output contains {shy} invisible glyph piece(s) (byte 173 — the left part of "
+                "వి/వీ/మి/మీ). Word and web editors delete it on paste, turning వినయ్ into ఇనయ్. "
+                "Paste directly into iLEAP/PageMaker only, or use the ANSI download below."
+            )
         st.download_button(
             "Download as ANSI .txt (legacy-compatible bytes)",
             data=to_bytes(leap_text),
@@ -87,6 +94,7 @@ if uni_text:
 st.divider()
 st.caption(
     "The output box renders with the embedded TL-Hemalatha font, so it should read as Telugu. "
-    "The underlying characters are the legacy font byte values — paste them into Word/PageMaker "
-    "with the TL-Hemalatha font selected, or use the ANSI download for byte-exact files."
+    "The underlying characters are the legacy font byte values — use the ANSI download for "
+    "byte-exact files, or paste directly into iLEAP/PageMaker. Avoid routing the text through "
+    "Word or web editors: they delete the invisible byte-173 piece used by వి/వీ/మి/మీ."
 )

@@ -142,6 +142,9 @@ HTML = """<!DOCTYPE html>
           word-break: break-all; background: var(--bg); border-radius: 8px; padding: 10px;
           border: 1px solid var(--border); }}
   .note {{ color: var(--muted); font-size: .82rem; margin-top: 20px; }}
+  .warn {{ display: none; margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+           font-size: .85rem; line-height: 1.5; border: 1px solid #d97706;
+           background: rgba(217, 119, 6, .08); color: inherit; }}
 </style>
 </head>
 <body>
@@ -164,13 +167,15 @@ HTML = """<!DOCTYPE html>
         <button id="copy">Copy</button>
         <button id="download">Download ANSI .txt</button>
       </div>
+      <div class="warn" id="warn"></div>
       <details><summary>Raw characters (what actually gets copied)</summary><div id="raw"></div></details>
     </div>
   </div>
   <div class="stats" id="stats"></div>
   <p class="note">The output box renders with the embedded TL-Hemalatha font. The underlying characters are legacy
-  font byte values — paste into Word/PageMaker with the TL-Hemalatha font selected, or use the ANSI download
-  for byte-exact files.</p>
+  font byte values. Use <b>Download ANSI .txt</b> for byte-exact files, or paste the copied text <b>directly</b>
+  into the target application (iLEAP/PageMaker). Do not route it through Word or web editors — they silently
+  delete the invisible byte-173 piece that వి, వీ, మి and మీ are built from (వినయ్ becomes ఇనయ్).</p>
 </div>
 <script>
 const TABLES = {tables};
@@ -182,6 +187,12 @@ function run() {{
   const out = src ? convert(src) : '';
   $('out').value = out;
   $('raw').textContent = out;
+  const shy = (out.match(/\\u00AD/g) || []).length;
+  $('warn').style.display = shy ? 'block' : 'none';
+  if (shy) $('warn').textContent = '\\u26A0 This output contains ' + shy + ' invisible glyph piece(s) '
+    + '(byte 173 \\u2014 the left part of \\u0C35\\u0C3F/\\u0C35\\u0C40/\\u0C2E\\u0C3F/\\u0C2E\\u0C40). '
+    + 'Word and web editors delete it on paste, so \\u0C35\\u0C3F\\u0C28\\u0C2F\\u0C4D turns into '
+    + '\\u0C07\\u0C28\\u0C2F\\u0C4D. Paste directly into iLEAP/PageMaker only, or use Download ANSI .txt.';
   $('stats').textContent = src
     ? `Characters: ${{src.length}} · Words: ${{src.trim().split(/\\s+/).filter(Boolean).length}} · Output characters: ${{out.length}}`
     : '';

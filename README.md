@@ -82,6 +82,38 @@ convert('నమస్కారం');       // string, chars = font byte values v
 toBytes(convert('...'));    // raw legacy bytes (for files/clipboard interop)
 ```
 
+## Known hazard: byte 173 (soft hyphen) — the వి/వీ/మి/మీ bug class
+
+The Hemalatha glyphs for **వి (122), వీ (158), మి (116), మీ (152)** all begin
+with byte `0xAD`, which is **U+00AD SOFT HYPHEN** when the output travels as
+Unicode text. Word, web CMS fields and many editors treat U+00AD as an
+invisible "optional hyphen" and silently delete it on paste — the syllable
+loses its left piece and the print shows things like:
+
+| Printed (broken) | Intended |
+|---|---|
+| ఇనయ్ | వినయ్ |
+| సపంలో | సమీపంలో |
+| దిగింగుకుంటున్నారనే | దిగమింగుకుంటున్నారనే |
+| భాగం | విభాగం |
+
+The converter output itself is byte-correct (verified glyph-by-glyph against
+`U2LEAP.dll` and by rendering with the font — see `verify_corpus.txt` last
+line). The loss happens **downstream**, in any Unicode-text hop that strips
+soft hyphens. The font maps this glyph *only* at 0xAD, so no alternate byte
+exists. Rules:
+
+1. **Never route the copied output through Word or a web editor.** Paste it
+   directly into the target application, or better:
+2. **Use the ANSI .txt download** (both UIs have it) — raw bytes, immune to
+   Unicode text processing. This matches the legacy UNI2LEAP.EXE workflow,
+   which always transferred files, never clipboard text.
+3. Both UIs now show a warning whenever the output contains byte-173 pieces.
+
+Related: the చేపట్టాలని → చేపర్టా-looking misprint is the old ్ట vattu bug
+(glyph 710 instead of 727), fixed in commit `7667308` — make sure the
+**deployed** web app is rebuilt/redeployed after that commit.
+
 ## Verification against the legacy app (TODO — needs the Win7 box or a VM)
 
 Run each line of `verify_corpus.txt` through the real UNI 2 LEAP app and diff
