@@ -110,6 +110,15 @@ exists. Rules:
    which always transferred files, never clipboard text.
 3. Both UIs now show a warning whenever the output contains byte-173 pieces.
 
+**Viewer rendering fix:** browsers *also* refuse to draw U+00AD, so the
+output box used to show the same broken syllables (ఇనయ్ for వినయ్) even
+though the copied text was correct. Both UIs now embed the font with an
+added cmap alias **U+F0AD (PUA) → the 0xAD glyph**, display U+F0AD in the
+output box (so it renders correctly), and intercept the `copy` event to put
+the real U+00AD text on the clipboard. The Copy button, manual Ctrl+C, the
+raw view and the ANSI download all carry the true byte-173 character.
+`build_web.py` needs `fonttools` to do the patch (in `requirements.txt`).
+
 Related: the చేపట్టాలని → చేపర్టా-looking misprint is the old ్ట vattu bug
 (glyph 710 instead of 727), fixed in commit `7667308` — make sure the
 **deployed** web app is rebuilt/redeployed after that commit.

@@ -4,12 +4,32 @@ Inlines tables.json, the TL-Hemalatha font (base64), and a browser port of the
 converter. Run after changing tables or conversion logic:  python3 build_web.py
 """
 import base64
-import json
+from io import BytesIO
 from pathlib import Path
+
+from fontTools.ttLib import TTFont
 
 HERE = Path(__file__).parent
 tables = (HERE / "tables.json").read_text(encoding="utf-8")
-font_b64 = base64.b64encode((HERE / "TL-TTHemalatha-Normal.ttf").read_bytes()).decode()
+
+
+def display_font_b64() -> str:
+    """Embed the font with a U+F0AD (PUA) alias for the byte-173 glyph.
+
+    Browsers never draw U+00AD (soft hyphen), so the వి/వీ/మి/మీ left piece
+    vanished in the output box. The viewer displays U+F0AD instead, which the
+    aliased cmap renders identically; copy/download swap the real byte back in.
+    """
+    font = TTFont(HERE / "TL-TTHemalatha-Normal.ttf")
+    for table in font["cmap"].tables:
+        if table.isUnicode():
+            table.cmap[0xF0AD] = table.cmap[0xAD]
+    buf = BytesIO()
+    font.save(buf)
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+font_b64 = display_font_b64()
 
 CONVERTER_JS = r"""
 const GLYPHS = TABLES.glyphs;
@@ -175,38 +195,48 @@ HTML = """<!DOCTYPE html>
   <p class="note">The output box renders with the embedded TL-Hemalatha font. The underlying characters are legacy
   font byte values. Use <b>Download ANSI .txt</b> for byte-exact files, or paste the copied text <b>directly</b>
   into the target application (iLEAP/PageMaker). Do not route it through Word or web editors — they silently
-  delete the invisible byte-173 piece that వి, వీ, మి and మీ are built from (వినయ్ becomes ఇనయ్).</p>
+  delete the byte-173 piece that వి, వీ, మి and మీ are built from (వినయ్ becomes ఇనయ్).</p>
 </div>
 <script>
 const TABLES = {tables};
 {converter_js}
 const $ = (id) => document.getElementById(id);
 const SAMPLE = 'నమస్కారం! తెలుగు వార్తలు ఆంధ్రప్రభ ముఖ్యమంత్రి ప్రభుత్వం స్త్రీ క్షమించండి ౧౨౩';
+let trueOut = '';  // real converted text (contains U+00AD); the box shows U+F0AD instead
 function run() {{
   const src = $('inp').value;
-  const out = src ? convert(src) : '';
-  $('out').value = out;
-  $('raw').textContent = out;
-  const shy = (out.match(/\\u00AD/g) || []).length;
+  trueOut = src ? convert(src) : '';
+  $('out').value = trueOut.replace(/\\u00AD/g, '\\uF0AD');
+  $('raw').textContent = trueOut;
+  const shy = (trueOut.match(/\\u00AD/g) || []).length;
   $('warn').style.display = shy ? 'block' : 'none';
-  if (shy) $('warn').textContent = '\\u26A0 This output contains ' + shy + ' invisible glyph piece(s) '
+  if (shy) $('warn').textContent = '\\u26A0 This output contains ' + shy + ' fragile glyph piece(s) '
     + '(byte 173 \\u2014 the left part of \\u0C35\\u0C3F/\\u0C35\\u0C40/\\u0C2E\\u0C3F/\\u0C2E\\u0C40). '
-    + 'Word and web editors delete it on paste, so \\u0C35\\u0C3F\\u0C28\\u0C2F\\u0C4D turns into '
+    + 'It displays and copies correctly here, but Word and web editors delete it on paste, so '
+    + '\\u0C35\\u0C3F\\u0C28\\u0C2F\\u0C4D turns into '
     + '\\u0C07\\u0C28\\u0C2F\\u0C4D. Paste directly into iLEAP/PageMaker only, or use Download ANSI .txt.';
   $('stats').textContent = src
-    ? `Characters: ${{src.length}} · Words: ${{src.trim().split(/\\s+/).filter(Boolean).length}} · Output characters: ${{out.length}}`
+    ? `Characters: ${{src.length}} · Words: ${{src.trim().split(/\\s+/).filter(Boolean).length}} · Output characters: ${{trueOut.length}}`
     : '';
 }}
 $('inp').addEventListener('input', run);
 $('sample').onclick = () => {{ $('inp').value = SAMPLE; run(); }};
 $('clear').onclick = () => {{ $('inp').value = ''; run(); }};
 $('copy').onclick = async () => {{
-  await navigator.clipboard.writeText($('out').value);
+  await navigator.clipboard.writeText(trueOut);
   $('copy').textContent = 'Copied!'; setTimeout(() => $('copy').textContent = 'Copy', 1200);
 }};
+// Manual Ctrl+C from the box: put the real text (U+00AD, not the display alias)
+// on the clipboard so pasting into iLEAP/PageMaker stays byte-exact.
+$('out').addEventListener('copy', (e) => {{
+  const t = $('out');
+  const sel = t.selectionStart === t.selectionEnd
+    ? t.value : t.value.slice(t.selectionStart, t.selectionEnd);
+  e.clipboardData.setData('text/plain', sel.replace(/\\uF0AD/g, '\\u00AD'));
+  e.preventDefault();
+}});
 $('download').onclick = () => {{
-  const s = $('out').value;
-  const bytes = new Uint8Array([...s].map((c) => c.charCodeAt(0) & 0xff));
+  const bytes = new Uint8Array([...trueOut].map((c) => c.charCodeAt(0) & 0xff));
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([bytes], {{ type: 'text/plain' }}));
   a.download = 'converted_hemalatha.txt';
